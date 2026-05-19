@@ -1,60 +1,467 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مشهد المستشفى</title>
+  <title>وصول حمزة أحمد إبراهيم مخلوف - الفخامة والجمال</title>
+  
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
   <style>
-    body { margin:0; background:#000; display:flex; justify-content:center; align-items:center; height:100vh; }
-  .overlay {
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%, -50%); /* علشان يجي في النص بالظبط */
-  color:#0f0;
-  font-size:32px;
-  text-align:center;
-   display:none; 
-}
-  #hospitalVideo { width:100%; height:100vh; object-fit:cover; display:none; }
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;700&display=swap');
+
+    :root {
+      --gold-primary: #D4AF37;
+      --gold-secondary: #FFDF00;
+      --dark-bg: #0a0a0a;
+      --glass-bg: rgba(15, 15, 15, 0.6);
+      --glass-border: rgba(212, 175, 55, 0.25);
+      --text-main: #f8f8f8;
+      --text-muted: #cccccc;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Tajawal', sans-serif;
+    }
+
+    body {
+      background-color: var(--dark-bg);
+      color: var(--text-main);
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+    }
+
+    /* Cinematic Video Background */
+    .video-bg {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100vh;
+      object-fit: cover;
+      z-index: -3;
+      opacity: 0.25;
+    }
+    .vignette {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100vh;
+      background: radial-gradient(circle at center, transparent 10%, var(--dark-bg) 100%);
+      z-index: -2;
+    }
     
-    #startBtn { padding:20px 40px; font-size:24px; cursor:pointer; border-radius:12px; background:#ff69b4; color:#fff; border:none; }
+    /* Golden Particles Canvas */
+    #particlesCanvas {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100vh;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Audio Toggle Button */
+    #audioToggle {
+      position: fixed;
+      bottom: 30px; left: 30px;
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--gold-primary);
+      font-size: 24px;
+      display: flex; justify-content: center; align-items: center;
+      cursor: pointer;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      display: none; /* مخفي في البداية */
+    }
+    #audioToggle:hover { transform: scale(1.1); box-shadow: 0 0 15px rgba(212,175,55,0.3); }
+
+    /* Sections */
+    section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 20px;
+      position: relative;
+    }
+
+    /* Typography */
+    .gold-text {
+      background: linear-gradient(45deg, var(--gold-primary), #fff, var(--gold-primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    h1 { font-size: clamp(2.5rem, 5vw, 4.5rem); margin-bottom: 15px; text-align: center; }
+    h2 { font-size: clamp(1.8rem, 3vw, 2.5rem); margin-bottom: 25px; text-align: center; }
+    
+    .poem {
+      font-size: clamp(1.2rem, 2vw, 1.5rem);
+      line-height: 2;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 40px;
+      font-weight: 300;
+      max-width: 800px;
+      position: relative;
+    }
+    .poem::before, .poem::after {
+      content: '✨';
+      color: var(--gold-primary);
+      margin: 0 10px;
+    }
+
+    /* Glassmorphism Card */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 30px;
+      padding: 50px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.7), inset 0 0 20px rgba(212, 175, 55, 0.05);
+      z-index: 10;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    /* Start Button */
+    .start-btn {
+      padding: 18px 50px;
+      font-size: 1.3rem;
+      font-family: 'Tajawal', sans-serif;
+      font-weight: 700;
+      color: #fff;
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid var(--gold-primary);
+      border-radius: 50px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: 0.4s;
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+    }
+    .start-btn:hover { background: rgba(212, 175, 55, 0.3); box-shadow: 0 0 40px rgba(212, 175, 55, 0.6); transform: translateY(-5px); }
+
+    /* Baby Image */
+    .image-container {
+      width: clamp(250px, 60vw, 350px);
+      aspect-ratio: 1/1;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid var(--glass-border);
+      box-shadow: 0 0 50px rgba(212, 175, 55, 0.3);
+      margin-bottom: 40px;
+      position: relative;
+    }
+    .image-container img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform 0.8s ease;
+    }
+    .image-container:hover img { transform: scale(1.1); }
+
+    /* Live Counter */
+    .counter-container {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .counter-box {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 15px;
+      padding: 15px 25px;
+      text-align: center;
+      min-width: 120px;
+    }
+    .counter-num { font-size: 2.5rem; color: var(--gold-primary); font-weight: bold; }
+    .counter-label { font-size: 1rem; color: var(--text-muted); }
+
+    /* Firebase Form */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+    }
+    input {
+      width: 100%; padding: 18px 25px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--glass-border);
+      border-radius: 15px;
+      color: #fff; font-size: 1.1rem;
+      transition: all 0.3s;
+      font-family: 'Tajawal', sans-serif;
+    }
+    input:focus { outline: none; border-color: var(--gold-primary); box-shadow: 0 0 15px rgba(212,175,55,0.2); }
+    
+    /* Suggestions */
+    .suggestions {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; justify-content: center;
+    }
+    .suggestion-pill {
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      color: var(--text-muted);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .suggestion-pill:hover { background: var(--gold-primary); color: #000; }
+
+    /* Messages Grid */
+    .messages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      width: 100%;
+      margin-top: 40px;
+      max-height: 500px;
+      overflow-y: auto;
+      padding-left: 10px;
+    }
+    .messages-grid::-webkit-scrollbar { width: 6px; }
+    .messages-grid::-webkit-scrollbar-thumb { background: var(--gold-primary); border-radius: 10px; }
+    
+    .msg-card {
+      background: rgba(255,255,255,0.02);
+      border-right: 3px solid var(--gold-primary);
+      padding: 25px;
+      border-radius: 15px;
+      backdrop-filter: blur(5px);
+      transition: transform 0.3s;
+    }
+    .msg-card:hover { transform: translateY(-5px); background: rgba(212, 175, 55, 0.08); }
+
+    /* Animations */
+    .reveal { opacity: 0; transform: translateY(40px); transition: all 1.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .reveal.active { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body>
-  <!-- زر البداية -->
-  <button id="startBtn">🚀 ابدأ الرحلة</button>
 
-  <!-- الفيديو -->
-  <video id="hospitalVideo">
+  <video class="video-bg" id="bgVideo" loop muted playsinline>
     <source src="assets/hospital2.mp4" type="video/mp4">
   </video>
-  <div class="overlay">💓.....نبض القلب يعمل</div>
+  <div class="vignette"></div>
+  <canvas id="particlesCanvas"></canvas>
 
-<script>
-  const startBtn = document.getElementById("startBtn");
-  const video = document.getElementById("hospitalVideo");
-  const overlay = document.querySelector(".overlay");
-  let heartbeatSound = new Audio("assets/heartbeat.mp3");
-  heartbeatSound.loop = true;
+  <button id="audioToggle">🔊</button>
 
-  startBtn.addEventListener("click", () => {
-    // إخفاء الزر وإظهار الفيديو والنص
-    startBtn.style.display = "none";
-    video.style.display = "block";
-    overlay.style.display = "block";
+  <audio id="heartbeatAudio" src="assets/heartbeat.mp3" loop></audio>
+  <audio id="ambientAudio" src="assets/doctor.mp3" loop></audio>
+  <audio id="babyCryAudio" src="assets/babycry.mp3"></audio>
 
-    // تشغيل الفيديو والصوت
-    video.play();
-    heartbeatSound.play();
-  });
+  <section id="intro">
+    <div class="glass-card reveal" style="text-align: center; max-width: 700px;">
+      <h1 class="gold-text">❤️نورت بيتنا يا حمزة❤️</h1>
+      <p class="poem">"اللهم أنبته نباتاً حسناً، واجعله قرة عين لوالديه، واحفظه بعينك التي لا تنام"
+      </p>
+      <button class="start-btn" id="startBtn"> تسجيل الدخول للتهنئة</button>
+    </div>
+  </section>
 
-  // لما الفيديو يخلص، نوقف الصوت وننتقل للصفحة التانية
-  video.addEventListener("ended", ()=>{
-    heartbeatSound.pause();
-    window.location.href = "main.html"; // الانتقال التلقائي
-  });
-</script>
+  <section id="hero" style="display: none;">
+    <h2 class="gold-text reveal">❤️حمزة أحمد إبراهيم مخلوف❤️</h2>
+    
+    <div class="image-container reveal">
+      <img src="https://images.unsplash.com/photo-1604917621956-10dfa7cce2e7?w=700&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8bmV3Ym9ybnxlbnwwfHwwfHx8MA%3D%3D" alt="المولود حمزة">
+    </div>
+
+    <h3 style="margin-bottom: 20px; color: var(--gold-primary);" class="reveal">❤️نورت بيتك يا حمزة❤️</h3>
+    <div class="counter-container reveal" id="counter">
+      <div class="counter-box"><div class="counter-num" id="days">0</div><div class="counter-label">أيام</div></div>
+      <div class="counter-box"><div class="counter-num" id="hours">0</div><div class="counter-label">ساعات</div></div>
+      <div class="counter-box"><div class="counter-num" id="minutes">0</div><div class="counter-label">دقائق</div></div>
+      <div class="counter-box"><div class="counter-num" id="seconds">0</div><div class="counter-label">ثواني</div></div>
+    </div>
+  </section>
+
+  <section id="guestbook" style="display: none;">
+    <div class="glass-card reveal">
+      <h2 class="gold-text">❤️سجل التهاني والمباركات لحمزة❤️</h2>
+      <p style="text-align: center; color: var(--text-muted); margin-bottom: 30px;">شاركنا فرحتنا بكلمة تذكارية لحمزة وعائلته</p>
+      
+      <div class="suggestions">
+        <div class="suggestion-pill" onclick="fillSuggestion('ألف مبروك قدوم الغالي حمزة، يتربى في عزكم ودلالكم يا رب.')">ألف مبروك الغالي</div>
+        <div class="suggestion-pill" onclick="fillSuggestion('اللهم اجعله من الصالحين المصلحين البارين بوالديه. مبروك ما جاكم!')">دعاء بالصلاح</div>
+        <div class="suggestion-pill" onclick="fillSuggestion('نورت العائلة يا بطل، أسأل الله أن يحفظك ويبارك فيك.')">نورت العائلة</div>
+        <div class="suggestion-pill" onclick="fillSuggestion('بورك لكم في الموهوب وشكرتم الواهب وبلغ أشده ورزقتم بره.')">تهنئة إسلامية</div>
+      </div>
+
+      <div class="form-group">
+        <input type="text" id="userNameInput" placeholder="اسمك الكريم (مثال: خالك محمد)">
+        <input type="text" id="msgInput" placeholder="اكتب رسالتك الجميلة هنا...">
+        <button class="start-btn" onclick="addMessage()">إرسال التهنئة</button>
+      </div>
+
+      <div class="messages-grid" id="messagesList">
+        </div>
+    </div>
+  </section>
+
+  <script>
+    // --- 1. Initial Animations & Interactions ---
+    window.addEventListener('load', () => {
+      document.querySelector('#intro .reveal').classList.add('active');
+      initParticles();
+    });
+
+    const startBtn = document.getElementById('startBtn');
+    const bgVideo = document.getElementById('bgVideo');
+    const heartbeatAudio = document.getElementById('heartbeatAudio');
+    const ambientAudio = document.getElementById('ambientAudio');
+    const babyCryAudio = document.getElementById('babyCryAudio');
+    const audioToggle = document.getElementById('audioToggle');
+    let isMuted = false;
+
+    startBtn.addEventListener('click', () => {
+      bgVideo.play();
+      heartbeatAudio.volume = 0.5; heartbeatAudio.play();
+      ambientAudio.volume = 0.7; ambientAudio.play();
+      babyCryAudio.volume = 0.3; babyCryAudio.play();
+      
+      audioToggle.style.display = 'flex';
+
+      document.getElementById('intro').style.display = 'none';
+      document.getElementById('hero').style.display = 'flex';
+      document.getElementById('guestbook').style.display = 'flex';
+      
+      setTimeout(() => { triggerReveals(); startCounter(); }, 100);
+      window.scrollTo(0, 0);
+    });
+
+    // Audio Toggle Logic
+    audioToggle.addEventListener('click', () => {
+      isMuted = !isMuted;
+      heartbeatAudio.muted = isMuted;
+      ambientAudio.muted = isMuted;
+      bgVideo.muted = isMuted;
+      audioToggle.innerHTML = isMuted ? '🔇' : '🔊';
+    });
+
+    // --- 2. Golden Particles Background ---
+    function initParticles() {
+      const canvas = document.getElementById("particlesCanvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+
+      const particles = Array.from({length: 80}, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 2 + 1,
+        speedY: Math.random() * 0.5 + 0.1,
+        opacity: Math.random()
+      }));
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.y -= p.speedY;
+          p.opacity += Math.sin(Date.now() * 0.001 + p.x) * 0.01;
+          if(p.y < 0) { p.y = canvas.height; p.x = Math.random() * canvas.width; }
+          
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(212, 175, 55, ${Math.abs(p.opacity)})`;
+          ctx.fill();
+        });
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    // --- 3. Scroll Reveal ---
+    function triggerReveals() {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
+      }, { threshold: 0.15 });
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    }
+
+    // --- 4. Live Counter (May 2026) ---
+    // تحديد تاريخ الولادة (مثلاً 1 مايو 2026 الساعة 10 صباحاً، يمكنك تعديله)
+    const birthDate = new Date('May 1, 2026 10:00:00').getTime(); 
+    
+    function startCounter() {
+      setInterval(() => {
+        const now = new Date().getTime();
+        // إذا كان التاريخ في المستقبل نضع الأصفار أو نحسب المتبقي
+        const distance = now > birthDate ? now - birthDate : 0; 
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        document.getElementById('days').innerText = days;
+        document.getElementById('hours').innerText = hours;
+        document.getElementById('minutes').innerText = minutes;
+        document.getElementById('seconds').innerText = seconds;
+      }, 1000);
+    }
+
+    // --- 5. Firebase & Suggestions ---
+    function fillSuggestion(text) {
+      document.getElementById('msgInput').value = text;
+      document.getElementById('msgInput').focus();
+    }
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAG8nEmpnejjVKmA5hrf6Ap4_OVc3uiCYY",
+      authDomain: "hospital-6c7bc.firebaseapp.com",
+      databaseURL: "https://hospital-6c7bc-default-rtdb.firebaseio.com",
+      projectId: "hospital-6c7bc",
+      storageBucket: "hospital-6c7bc.firebasestorage.app",
+      messagingSenderId: "369216236461",
+      appId: "1:369216236461:web:d81570e0310586f4df4f24"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function addMessage() {
+      const msg = document.getElementById('msgInput').value;
+      const userName = document.getElementById('userNameInput').value;
+      if(msg.trim() !== "" && userName.trim() !== "") {
+        db.ref("messages").push({
+          name: userName,
+          text: msg,
+          timestamp: new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+        });
+        document.getElementById('msgInput').value = "";
+        document.getElementById('userNameInput').value = "";
+      }
+    }
+
+    db.ref("messages").on("child_added", snapshot => {
+      const data = snapshot.val();
+      let nameStr = data.name || "ضيف";
+      let textStr = data.text || data; 
+      let timeStr = data.timestamp || "";
+
+      if(typeof data === 'string') {
+        const split = data.split(':');
+        if(split.length > 1) { nameStr = split[0]; textStr = split.slice(1).join(':'); }
+      }
+
+      const card = document.createElement('div');
+      card.className = "msg-card";
+      card.innerHTML = `
+        <h3 class="gold-text" style="margin-bottom: 10px;">${nameStr}</h3>
+        <p style="font-size: 1.1rem; line-height: 1.6;">${textStr}</p>
+        <span style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 15px;">⏳ ${timeStr}</span>
+      `;
+      document.getElementById('messagesList').prepend(card);
+    });
+  </script>
 </body>
 </html>
->
